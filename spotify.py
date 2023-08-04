@@ -1,8 +1,9 @@
 
 import os
 import json
-import base64
 import urllib.parse
+import credentials
+
 class SpotifyRequest: 
     authentication_token = ""
     def __init__(self):
@@ -44,13 +45,14 @@ class SpotifyRequest:
         print(uid)
 
 
-def obtain_credentials(file_path):
-    credentials = list()
-    with open(file_path) as file:
-        for line in file:
-            line = line.strip()
-            credentials.append(line)
-    return credentials
+# def obtain_credentials(file_path):
+#     credentials = list()
+#     with open(file_path) as file:
+#         for line in file:
+#             line = line.strip()
+#             credentials.append(line)
+#     return credentials
+
 def main():
     import argparse
 
@@ -58,10 +60,12 @@ def main():
     parser.add_argument('file_path', type=str, help='Path to a file containing the keys to authenticate to Spotify')
     args = parser.parse_args()
 
-    credentials = obtain_credentials(args.file_path)
+    #credentials = obtain_credentials(args.file_path)
+    client_id = credentials.get_credential("spotifyClientId")
+    client_secret = credentials.get_credential("spotifyClientSecret")
 
     request = SpotifyRequest()
-    request.authenticate(credentials[0], credentials[1])
+    request.authenticate(client_id, client_secret)
     request.search("Taylor Swift")
 
 

@@ -1,12 +1,9 @@
 
 import requests
-import json
+import credentials
 
-credentialsFile = open("credentials.json")
 
-credentials = json.load(credentialsFile)
-
-apiKey = credentials['setlistsFmApiKey']
+apiKey = credentials.get_credential("setlistsFmApiKey")
 
 apiUrl = "https://api.setlist.fm/rest/1.0/"
 
