@@ -1,10 +1,11 @@
 import json
 
-credentials_file_name = "credentials.json"
+CREDENTIALS_FILE_NAME = "credentials.json"
 __credentials = {}
 
 # Read the file and load the JSON data as dictionary
-credentials_file = open(credentials_file_name)
+print(f"CREDENTIALS: loading {CREDENTIALS_FILE_NAME}")
+credentials_file = open(CREDENTIALS_FILE_NAME)
 __credentials = json.load(credentials_file)
 credentials_file.close()       
 
