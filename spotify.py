@@ -45,22 +45,7 @@ class SpotifyRequest:
         print(uid)
 
 
-# def obtain_credentials(file_path):
-#     credentials = list()
-#     with open(file_path) as file:
-#         for line in file:
-#             line = line.strip()
-#             credentials.append(line)
-#     return credentials
-
 def main():
-    import argparse
-
-    parser = argparse.ArgumentParser(description='Obtain artist from spotify.')
-    parser.add_argument('file_path', type=str, help='Path to a file containing the keys to authenticate to Spotify')
-    args = parser.parse_args()
-
-    #credentials = obtain_credentials(args.file_path)
     client_id = credentials.get_credential("spotifyClientId")
     client_secret = credentials.get_credential("spotifyClientSecret")
 
