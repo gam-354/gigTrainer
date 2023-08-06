@@ -1,48 +1,62 @@
 
-import os
-import json
-import urllib.parse
 import credentials
+import requests
 
 class SpotifyRequest: 
     authentication_token = ""
     def __init__(self):
         pass
 
-    def request(self,type, url, header,body):
-        command = f'curl -X {type} "{url}" -H "{header}" -d "{body}"'
-        if body=="":
-            command = f'curl -X {type} "{url}" -H "{header}"'
-        print(command)
-        return self.execute_command(command)
+    def request(self, type, url, authenticated=False, header={}, params={}):
+
+        if authenticated:
+            header['Authorization'] = f"Bearer {self.authentication_token}"
+
+        if type == "GET":
+            response = requests.get(url, params=params, headers=header)
+        elif type == "POST":
+            response = requests.post(url, data=params, headers=header)
+
+        print(f"Request sent: {response.url}")
+        print(f"Request response: {response.json()}")
+        return response
 
 
-    def execute_command(self, command):
-        result = os.popen(command).read()
-        return result 
+    def authenticate(self, client_id, client_secret):
+        url = "https://accounts.spotify.com/api/token"
 
-    def authenticate(self,client_id, client_secret):
+        header = {
+            'Content-Type' : "application/x-www-form-urlencoded"
+        }
+        data = {
+            'grant_type' : "client_credentials",
+            'client_id' : client_id,
+            'client_secret' : client_secret
+        }
 
-        header = ""
-        body = f"grant_type=client_credentials&client_id={client_id}&client_secret={client_secret}"
-        result = self.request("POST", "https://accounts.spotify.com/api/token", header + "Content-Type: application/x-www-form-urlencoded", body)
-        print(result)
-        self.authentication_token = json.loads(result)["access_token"]
-        print(self.authentication_token)
+        result = self.request("POST", url, False, header, data)
 
-    def authenticated_request(self,type, url, header,body):
-        authenticated_header=header+f"Authorization: Bearer {self.authentication_token}"
-        return self.request(type, url, authenticated_header, body)
-    def search(self,artist):
-        artist_encoded=urllib.parse.quote(artist)
-        query=urllib.parse.quote(f"{artist}")
-        type="artist"
-        url=f"https://api.spotify.com/v1/search?q={query}&type={type}"
-        result = self.authenticated_request("GET",url,"","")
+        self.authentication_token = result.json()["access_token"]
+        print(f"Authenticated with token: {self.authentication_token}")
+    
 
-        print(result)
-        uid = json.loads(result)["artists"]["href"]
-        print(uid)
+    def search(self,artistName):
+
+        url = "https://api.spotify.com/v1/search"
+        params = {
+            'q' : artistName,
+            'type' : 'artist'
+        }
+
+        result = self.request("GET", url, authenticated=True, params=params)
+        resultJson = result.json()
+
+        # Keep the first result from the list
+        artist = resultJson['artists']['items'][0]['name']
+        uid = resultJson['artists']['items'][0]['id']
+
+        print(f"Found artist '{artist}' with id '{uid}'")
+       
 
 
 def main():
