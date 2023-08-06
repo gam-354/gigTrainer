@@ -10,7 +10,7 @@ API_COMMAND_SEARCH_ARTIST = "search/artists"
 API_COMMAND_ARTIST = "artist/"
 API_COMMAND_SETLISTS = "setlists/"
 
-API_MIN_SECONDS_BETWEEN_REQUESTS = 0.6
+API_MIN_SECONDS_BETWEEN_REQUESTS = 0.7
 API_SETLISTS_PER_PAGE = 20
 
 
@@ -21,8 +21,17 @@ API_DEFAULT_HEADERS = {
 
 timeLastRequest = 0.0
 
-def send_get_request(url, params={}, headers=API_DEFAULT_HEADERS):
+def detect_too_many_requests_error(response):
+    responseJson = response.json()
 
+    if not response.ok and responseJson['message'] == "Too Many Requests":
+        print("ERROR: too many requests! Retrying...")
+        return True
+    else:
+        return False
+
+
+def wait_until_available():
     global timeLastRequest
 
     # Ensure it's been enough time  so that a new request can be executed
@@ -33,12 +42,22 @@ def send_get_request(url, params={}, headers=API_DEFAULT_HEADERS):
         print(f"Waiting {remainingTime} to send request.")
         time.sleep(remainingTime)
 
-    # Build and execute the request
-    response = requests.get(url, params=params, headers=headers)
-    print(f"Sending GET request: {response.url}")
-
     # Update the timestamp
     timeLastRequest = time.time()
+
+
+def send_get_request(url, params={}, headers=API_DEFAULT_HEADERS):
+
+    mustRetry = True
+
+    while mustRetry:
+        wait_until_available()
+
+        # Build and execute the request
+        response = requests.get(url, params=params, headers=headers)
+        print(f"Sending GET request: {response.url}")
+
+        mustRetry = detect_too_many_requests_error(response)
 
     responseJson = response.json()
     print(f"Response: {responseJson}")
@@ -52,7 +71,7 @@ def search_artist(artistName):
 
     payload = {
         'artistName' : artistName,
-        'sort' : 'sortName'
+        'sort' : 'relevance'
     }
 
     response = send_get_request(url, params=payload)
@@ -89,16 +108,12 @@ def get_setlists(artistMbId, numSetlistsRequested=30):
         # Read the chunk of setlists and append them to the global list
         setlists += read_setlists_from_setlists_response(responseJson)
     
-    
-    #print("########################")
-    #print(f"Num setlists downloaded: {len(setlists)}")
-
     # Clip to the num of setlists requested, in case more
     # setlists were downloaded accidentally
     setlists = setlists[:numSetlistsRequested]
-    #print(f"Num setlists to return: {len(setlists)}")
 
-    print(setlists)
+    #print(setlists)
+    return setlists
 
 
 def read_setlists_from_setlists_response(responseJson):
@@ -120,12 +135,35 @@ def read_setlists_from_setlists_response(responseJson):
     return setlists
 
 
+def get_most_listened_songs(setlistsList, howMany=25):
+
+    songsAndPlays = {}
+
+    for setlist in setlistsList:
+        for song in setlist:
+
+            # Increase song play count, or add entry to the dict
+            songName = song['name']
+
+            if songName in songsAndPlays.keys():
+                songsAndPlays[songName] += 1
+            else:
+                songsAndPlays[songName] = 1
+
+    # Sorted will return a list of tuples, so convert it back to dictionary
+    mostPlayed = dict(sorted(songsAndPlays.items(), key=lambda x:x[1], reverse=True))
+
+    # Clip the list to the number of songs requested
+    return dict(list(mostPlayed.items())[:howMany])
+
+
+def demo(artistName):
+    artist = search_artist(artistName)
+    print(f"Found artist: {artist['name']}")
+    kgSetlists = get_setlists(artist['mbid'], 60)
+    most = get_most_listened_songs(kgSetlists)
+    print(most)
+
 # DEMO
 if __name__ == '__main__':
-    artist = search_artist("King Gizzard")
-    print(f"Found artist: {artist['name']}")
-    get_setlists(artist['mbid'])
-
-
-
-
+    demo("Oasis")
