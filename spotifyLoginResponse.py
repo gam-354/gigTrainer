@@ -15,8 +15,10 @@ def hola():
 
 @app.route("/callback")
 def processSpotifyCallback():
+    print("Received callback from Spotify")
     print(request.args.get('code'))
     print(request.args.get('state'))
+    return "OK"
 
 ####
 

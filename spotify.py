@@ -52,11 +52,11 @@ def main():
     userId = credentials.get_credential("spotifyUserIdGuille")
     scopes = "playlist-modify-public playlist-modify-private"
 
-    spotifyRequests.authenticate_basic(client_id, client_secret)
-    search_artist("Taylor Swift")
+    #spotifyRequests.authenticate_basic(client_id, client_secret)
+    #search_artist("Taylor Swift")
     #create_playlist(userId,"wisi wisi")
 
-    #request.authenticate_user(client_id, scopes)
+    spotifyRequests.authenticate_user(client_id, scopes)
 
 if __name__ == '__main__':
 

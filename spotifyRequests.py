@@ -19,7 +19,7 @@ def request(type, url, authenticated=False, header={}, params={}):
         response = requests.post(url, data=params, headers=header)
 
     print(f"Request sent: {response.url}")
-    print(f"Request response: {response.json()}")
+    #print(f"Request response: {response.json()}")
     print(f"Response OK? = {response.ok}")
     return response
 
