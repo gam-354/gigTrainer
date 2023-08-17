@@ -57,7 +57,7 @@ def get_setlists(artistMbId, numSetlistsRequested=30):
     # setlists were downloaded accidentally
     setlists = setlists[:numSetlistsRequested]
 
-    #print(setlists)
+    print(setlists)
     return setlists
 
 
@@ -67,15 +67,27 @@ def read_setlists_from_setlists_response(responseJson):
 
     # Add setlists from these results
     for setlist in responseJson['setlist']:
+
+        # This list will contain all the songs of this event
+        songsInThisEvent = []
         
-        # Try to retrieve the song list. If not available, skip this setlist
+        # Try to retrieve the sets list. If not available, skip this setlist
         try:
-            songlist = setlist['sets']['set'][0]['song']
+            sets = setlist['sets']['set']
         except:
-            continue    
-        
-        #print(songlist)
-        setlists.append(songlist)
+            continue
+
+        for set in sets:
+            # Try to retrieve the song list of every set. If not available, skip this set
+            try:
+                songsInThisSet = set['song']
+            except:
+                continue
+
+            songsInThisEvent += songsInThisSet
+
+        #print(songsInThisEvent)
+        setlists.append(songsInThisEvent)
 
     return setlists
 
@@ -105,7 +117,7 @@ def get_most_listened_songs(setlistsList, howMany=25):
 def demo(artistName):
     artist = search_artist(artistName)
     print(f"Found artist: {artist['name']}")
-    kgSetlists = get_setlists(artist['mbid'], 60)
+    kgSetlists = get_setlists(artist['mbid'], 1000)
     most = get_most_listened_songs(kgSetlists)
     print(most)
 
